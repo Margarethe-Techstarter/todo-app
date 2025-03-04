@@ -1,0 +1,124 @@
+* {
+    background-color: #73d08b;
+}
+
+.todo-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+    border-radius: 20px;
+    border-style: solid;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: white;
+}
+
+h1 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+    text-decoration: underline;
+    margin-top: 40px;
+    margin-bottom: 1px;
+}
+
+h2 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 30px;
+    text-decoration: none;
+    background-color: white;
+}
+
+.task-input {
+    width: 60%;
+    height: 15px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.add-button, .delete-button, .reset-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit-button {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    border-style: solid, black;
+    cursor: pointer;
+}
+
+.add-button:hover, .delete-button:hover, .reset-button:hover, .edit-button:hover {
+    background-color: #45a049;
+}
+
+.task-list {
+    list-style: none;
+    padding: 0;
+    background-color: white;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox {
+    margin-right: 10px;
+}
+
+.task-text {
+    flex-grow: 1;
+    text-align: left;
+    font-size: 1rem;
+    background-color: white;
+    cursor: pointer;
+}
+
+.completed {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.delete-button {
+    background-color: #f44336;
+}
+
+.delete-button:hover {
+    background-color: #e53935;
+}
+
+.reset-button {
+    background-color: #007bff;
+    color: white;
+    font-size: 1rem;
+}
+
+.reset-button:hover {
+    background-color: #0056b3;
+}
+
+.editing {
+    border: 2px solid red;
+    background-color: #fdd; /* Heller Hintergrund für das Bearbeiten */
+}
