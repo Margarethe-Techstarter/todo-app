@@ -3,8 +3,8 @@ import Todolist from './Todolist';
 
 function App() {
   return (
-    <div className="App">
-      <h1>Meine To-Do Liste</h1>
+    <div>
+      <h1>Hallo meine ToDoListe♥️!</h1>
       <Todolist />
     </div>
   );
