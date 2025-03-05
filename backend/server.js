@@ -25,6 +25,13 @@ db.run(`CREATE TABLE IF NOT EXISTS tasks (
     checked BOOLEAN
 )`);
 
+db.run('INSERT INTO tasks (task) VALUES(?)', "ToDo Liste Bauen");
+
+app.post('/add', (req, res) => {
+  db.run('INSERT INTO tasks (task) VALUES (?)', [req.body.task], function () {
+    res.json({tag: "Mittwoch", bald_wirds: "Mittagspause"})
+  });
+})
 // Endpunkt zum Abrufen aller Aufgaben
 app.get('/tasks', (req, res) => {
   db.all("SELECT * FROM tasks", [], (err, rows) => {
