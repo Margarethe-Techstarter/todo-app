@@ -1,85 +1,111 @@
-const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
-const cors = require("cors");
-const bodyParser = require("body-parser");
+const express = require('express');
+const cors = require('cors'); // Importiere CORS
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
 
+// Express app initialisieren
 const app = express();
-const port = 5000;  // Backend läuft auf Port 5000
 
-app.use(cors());
-app.use(bodyParser.json());
+// CORS Middleware aktivieren
+app.use(cors());  // Alle Ursprünge erlauben
 
-// SQLite-Datenbank erstellen oder öffnen
+// Datenbank verbinden
 const db = new sqlite3.Database('./tasks.db', (err) => {
   if (err) {
     console.error(err.message);
   } else {
-    console.log("Connected to the SQLite database.");
+    console.log("Mit der SQLite-Datenbank verbunden.");
   }
 });
 
+// Middleware für JSON-Daten
+app.use(bodyParser.json()); 
+
 // Tabelle für Aufgaben erstellen, falls noch nicht vorhanden
-db.run(`CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task TEXT,
-    checked BOOLEAN
-)`);
+db.run('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, completed BOOLEAN DEFAULT 0)', (err) => {
+  if (err) {
+    console.error("Fehler beim Erstellen der Tabelle:", err.message);
+  }
+});
 
-db.run('INSERT INTO tasks (task) VALUES(?)', "ToDo Liste Bauen");
+// Beispielroute (Startseite)
+app.get('/', (req, res) => {
+  res.send('Request empfangen');
+});
 
+// Beispielroute
+app.get('/ralf', (req, res) => {
+  res.send('Vielen Dank, Ralf!');
+});
+
+// Route zum Hinzufügen eines neuen Tasks
 app.post('/add', (req, res) => {
-  db.run('INSERT INTO tasks (task) VALUES (?)', [req.body.task], function () {
-    res.json({tag: "Mittwoch", bald_wirds: "Mittagspause"})
-  });
-})
-// Endpunkt zum Abrufen aller Aufgaben
-app.get('/tasks', (req, res) => {
-  db.all("SELECT * FROM tasks", [], (err, rows) => {
+  const { title } = req.body;
+
+  // Sicherstellen, dass der Task-Titel vorhanden ist
+  if (!title) {
+    return res.status(400).json({ error: 'Titel der Aufgabe ist erforderlich' });
+  }
+
+  db.run('INSERT INTO tasks (title) VALUES (?)', [title], function (err) {
     if (err) {
-      throw err;
+      return console.error("Fehler beim Hinzufügen der Aufgabe:", err.message);
+    }
+    res.status(201).json({ id: this.lastID, title, completed: false });
+  });
+});
+
+// Route zum Abrufen aller Tasks
+app.get('/tasks', (req, res) => {
+  db.all('SELECT * FROM tasks', (err, rows) => {
+    if (err) {
+      return console.error("Fehler beim Abrufen der Aufgaben:", err.message);
     }
     res.json(rows);
   });
 });
 
-// Endpunkt zum Hinzufügen einer neuen Aufgabe
-app.post('/tasks', (req, res) => {
-  const { task } = req.body;
-  const sql = 'INSERT INTO tasks (task, checked) VALUES (?, ?)';
-  db.run(sql, [task, false], function(err) {
-    if (err) {
-      return console.error(err.message);
-    }
-    res.status(201).json({ id: this.lastID, task, checked: false });
-  });
-});
-
-// Endpunkt zum Bearbeiten einer Aufgabe
+// Route zum Bearbeiten einer Aufgabe (Status ändern)
 app.put('/tasks/:id', (req, res) => {
-  const { task, checked } = req.body;
   const { id } = req.params;
-  const sql = 'UPDATE tasks SET task = ?, checked = ? WHERE id = ?';
-  db.run(sql, [task, checked, id], function(err) {
+  const { title, completed } = req.body;
+
+  if (!title && completed === undefined) {
+    return res.status(400).json({ error: 'Kein Titel oder Status zum Aktualisieren bereitgestellt' });
+  }
+
+  const updateQuery = 'UPDATE tasks SET title = ?, completed = ? WHERE id = ?';
+  db.run(updateQuery, [title || null, completed !== undefined ? completed : null, id], function (err) {
     if (err) {
-      return console.error(err.message);
+      return console.error("Fehler beim Bearbeiten der Aufgabe:", err.message);
     }
-    res.json({ id, task, checked });
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Aufgabe nicht gefunden' });
+    }
+
+    res.json({ id, title, completed });
   });
 });
 
-// Endpunkt zum Löschen einer Aufgabe
+// Route zum Löschen einer Aufgabe
 app.delete('/tasks/:id', (req, res) => {
   const { id } = req.params;
-  const sql = 'DELETE FROM tasks WHERE id = ?';
-  db.run(sql, [id], function(err) {
+
+  db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
     if (err) {
-      return console.error(err.message);
+      return console.error("Fehler beim Löschen der Aufgabe:", err.message);
     }
-    res.status(204).send();
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Aufgabe nicht gefunden' });
+    }
+
+    res.status(204).send(); // Erfolgreiches Löschen (keine Inhalte)
   });
 });
 
 // Server starten
-app.listen(port, () => {
-  console.log(`Backend läuft auf http://localhost:${port}`);
+app.listen(5000, 'localhost', () => {
+  console.log("Server läuft auf http://localhost:5000");
 });
