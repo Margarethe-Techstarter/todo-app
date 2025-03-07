@@ -1,83 +1,100 @@
 import React, { useState, useEffect } from 'react';
-import './Todolist.css';  // Deine CSS-Datei für Stil
+import './Todolist.css';
 
 function Todolist() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
-  const [editTaskId, setEditTaskId] = useState(null); // ID der Aufgabe, die bearbeitet wird
-  const [editText, setEditText] = useState(""); // Der neue Text für die Aufgabe
+  const [editTaskId, setEditTaskId] = useState(null);
+  const [editText, setEditText] = useState("");
 
-  // Lade Aufgaben vom Backend
+  // Aufgaben vom Backend laden
   useEffect(() => {
-    fetch('http://localhost:5000/tasks')
-      .then(response => response.json())
-      .then(data => setTasks(data))
-      .catch(error => console.error('Fehler beim Abrufen der Aufgaben:', error));
+    fetch("http://localhost:5000/tasks")
+      .then((response) => response.json())
+      .then((data) => setTasks(data))
+      .catch((error) => console.error("Fehler beim Laden der Aufgaben", error));
   }, []);
 
   // Aufgabe hinzufügen
   const addTask = () => {
     if (newTask.trim() !== "") {
-      fetch("http://localhost:5000/add", {
+      fetch("http://localhost:5000/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ task: newTask }), // Sendet die neue Aufgabe an das Backend
+        body: JSON.stringify({ task: newTask }),
       })
-      .then(response => response.json())
-      .then(data => {
-        setTasks([...tasks, data]);  // Neue Aufgabe zur Liste hinzufügen
-        setNewTask("");  // Eingabefeld leeren
-      })
-      .catch(error => console.error('Fehler beim Hinzufügen der Aufgabe:', error));
+        .then((response) => response.json())
+        .then((data) => {
+          setTasks([...tasks, data]);
+          setNewTask("");
+        })
+        .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
     }
   };
 
   // Aufgabe bearbeiten
-  const startEditTask = (id, task) => {
-    setEditTaskId(id);   // ID der Aufgabe speichern, die bearbeitet wird
-    setEditText(task);    // Text der Aufgabe zum Bearbeiten in das Eingabefeld setzen
-  };
-
-  // Aufgabe speichern (nach dem Bearbeiten)
   const saveEditTask = () => {
-    if (editText.trim() !== "") {
-      fetch(`http://localhost:5000/edit/${editTaskId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ task: editText }),
+    fetch(`http://localhost:5000/tasks/${editTaskId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ task: editText, checked: false }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTasks(tasks.map((task) => (task.id === editTaskId ? data : task)));
+        setEditTaskId(null);
+        setEditText("");
       })
-      .then(() => {
-        setTasks(tasks.map((task) =>
-          task.id === editTaskId ? { ...task, task: editText } : task
-        ));  // Aufgabe lokal aktualisieren
-        setEditTaskId(null);  // Bearbeitung beenden
-        setEditText("");  // Eingabefeld leeren
-      })
-      .catch(error => console.error('Fehler beim Bearbeiten der Aufgabe:', error));
-    }
+      .catch((error) => console.error("Fehler beim Bearbeiten der Aufgabe", error));
   };
 
   // Aufgabe löschen
   const deleteTask = (id) => {
-    fetch(`http://localhost:5000/delete/${id}`, {
-      method: "DELETE",  // DELETE-Anfrage an den Server
+    fetch(`http://localhost:5000/tasks/${id}`, {
+      method: "DELETE",
     })
-    .then(() => {
-      setTasks(tasks.filter(task => task.id !== id)); // Entfernt die Aufgabe aus dem lokalen State
-    })
-    .catch(error => console.error('Fehler beim Löschen der Aufgabe:', error));
+      .then(() => {
+        setTasks(tasks.filter((task) => task.id !== id));
+      })
+      .catch((error) => console.error("Fehler beim Löschen der Aufgabe", error));
   };
 
   // Aufgabe als erledigt markieren
   const toggleCompleted = (id) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === id ? { ...task, checked: !task.checked } : task
-    );
-    setTasks(updatedTasks); // Lokalen Status ändern
+    const task = tasks.find((task) => task.id === id);
+    fetch(`http://localhost:5000/tasks/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        task: task.task,
+        checked: !task.checked,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTasks(tasks.map((task) => (task.id === id ? data : task)));
+      })
+      .catch((error) => console.error("Fehler beim Markieren der Aufgabe", error));
+  };
+
+  // Aufgabe hinzufügen per Enter
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && newTask.trim() !== "") {
+      addTask();
+    }
+  };
+
+  // Bearbeiten speichern per Enter
+  const handleEditKeyDown = (e) => {
+    if (e.key === "Enter" && editText.trim() !== "") {
+      saveEditTask();
+    }
   };
 
   return (
@@ -87,10 +104,13 @@ function Todolist() {
         type="text"
         value={newTask}
         onChange={(e) => setNewTask(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="Neue Aufgabe"
         className="task-input"
       />
-      <button onClick={addTask} className="add-button">Add Task</button>
+      <button onClick={addTask} className="add-button">
+        Add Task
+      </button>
 
       <ul className="task-list">
         {tasks.length === 0 ? (
@@ -110,24 +130,33 @@ function Todolist() {
                     type="text"
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={handleEditKeyDown}
                     className="task-input"
                   />
-                  <button onClick={saveEditTask} className="save-button">Speichern</button>
+                  <button onClick={saveEditTask} className="save-button">
+                    Speichern
+                  </button>
                 </div>
               ) : (
-                <span className={task.checked ? "task-text completed" : "task-text"}>
+                <span
+                  onClick={() => setEditTaskId(task.id)}
+                  className={task.checked ? "task-text completed" : "task-text"}
+                >
                   {task.task}
                 </span>
               )}
               <button
                 className="delete-button"
-                onClick={() => deleteTask(task.id)} // Aufruf der deleteTask-Funktion
+                onClick={() => deleteTask(task.id)}
               >
                 Löschen
               </button>
               <button
                 className="edit-button"
-                onClick={() => startEditTask(task.id, task.task)} // Aufruf der startEditTask-Funktion
+                onClick={() => {
+                  setEditTaskId(task.id);
+                  setEditText(task.task);
+                }}
               >
                 Bearbeiten
               </button>

@@ -36,7 +36,7 @@ h2 {
   padding: 10px;
   margin: 10px 0;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid #090909;
   border-radius: 5px;
   text-align: center;
 }
@@ -67,6 +67,7 @@ h2 {
 }
 
 .task-list {
+  color: black;
   list-style: none;
   padding: 0;
   background-color: white;
@@ -89,6 +90,9 @@ h2 {
 
 .task-text {
   flex-grow: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 50%;
   text-align: left;
   font-size: 1rem;
   background-color: white;
@@ -121,4 +125,8 @@ h2 {
 .editing {
   border: 2px solid red;
   background-color: #fdd; /* Heller Hintergrund für das Bearbeiten */
+}
+.completed {
+  text-decoration: line-through;
+  color: #888;
 }
