@@ -23,6 +23,14 @@ h1 {
   margin-bottom: 40px;
 }
 
+p {
+  color: #2f6929;
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 2;
+}
+
 h2 {
   font-family: 'Times New Roman', Times, serif;
   font-size: 30px;
