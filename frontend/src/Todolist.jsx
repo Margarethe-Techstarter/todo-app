@@ -6,31 +6,44 @@ function Todolist() {
   const [newTask, setNewTask] = useState("");
   const [editTaskId, setEditTaskId] = useState(null);
   const [editText, setEditText] = useState("");
+  const [isAddPage, setIsAddPage] = useState(window.location.pathname === '/add');
 
-  // Aufgaben vom Backend laden
+  // Aufgaben vom Backend laden (nur wenn nicht auf /add)
   useEffect(() => {
-    fetch("http://localhost:5000/tasks")
-      .then((response) => response.json())
-      .then((data) => setTasks(data))
-      .catch((error) => console.error("Fehler beim Laden der Aufgaben", error));
-  }, []);
+    if (!isAddPage) {
+      // Auf der Hauptseite keine Daten vom Server laden
+      setTasks([]);
+    } else {
+      // Auf der Add-Seite vom Server laden
+      fetch("http://localhost:5000/tasks")
+        .then((response) => response.json())
+        .then((data) => setTasks(data))
+        .catch((error) => console.error("Fehler beim Laden der Aufgaben", error));
+    }
+  }, [isAddPage]);
 
-  // Aufgabe hinzufügen
+  // Aufgabe hinzufügen (nur auf der Add-Seite wird sie gespeichert)
   const addTask = () => {
     if (newTask.trim() !== "") {
-      fetch("http://localhost:5000/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ task: newTask }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          setTasks([...tasks, data]);
-          setNewTask("");
+      if (isAddPage) {
+        fetch("http://localhost:5000/tasks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ task: newTask }),
         })
-        .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
+          .then((response) => response.json())
+          .then((data) => {
+            setTasks([...tasks, data]);
+            setNewTask("");
+          })
+          .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
+      } else {
+        // Aufgaben nur lokal speichern, wenn nicht auf der /add-Seite
+        setTasks([...tasks, { id: Date.now(), task: newTask, checked: false }]);
+        setNewTask("");
+      }
     }
   };
 
@@ -109,7 +122,7 @@ function Todolist() {
         className="task-input"
       />
       <button onClick={addTask} className="add-button">
-        Add Task
+        {isAddPage ? "Add Task" : "Neue Aufgabe"}
       </button>
 
       <ul className="task-list">
