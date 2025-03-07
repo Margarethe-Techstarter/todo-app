@@ -11,8 +11,8 @@ function Todolist() {
   // Aufgaben vom Backend laden (nur wenn nicht auf /add)
   useEffect(() => {
     if (!isAddPage) {
-      // Auf der Hauptseite keine Daten vom Server laden
-      setTasks([]);
+      // Auf der Hauptseite keine Daten vom Server laden, aber die lokale Aufgabe hinzufügen
+      setTasks([{ id: Date.now(), task: "Neue To-Do-Liste erstellen! ♥️", checked: false }]);
     } else {
       // Auf der Add-Seite vom Server laden
       fetch("http://localhost:5000/tasks")
