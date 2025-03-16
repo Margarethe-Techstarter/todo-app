@@ -7,49 +7,49 @@ function Todolist() {
   const [editTaskId, setEditTaskId] = useState(null);
   const [editText, setEditText] = useState("");
   const [isAddPage, setIsAddPage] = useState(window.location.pathname === '/add');
+  const [isHomePage, setIsHomePage] = useState(window.location.pathname === '/');  // Für die Startseite
 
-  // Aufgaben vom Backend laden (nur wenn nicht auf /add)
+
+  
+  // Aufgaben vom Backend laden (nur wenn nicht auf der Startseite oder /add)
   useEffect(() => {
-    if (!isAddPage) {
-      // Auf der Hauptseite keine Daten vom Server laden, aber die lokale Aufgabe hinzufügen
-      setTasks([{ id: Date.now(), task: "Neue To-Do-Liste erstellen! ♥️", checked: false }]);
-    } else {
-      // Auf der Add-Seite vom Server laden
-      fetch("http://localhost:5000/tasks")
+    if (!isHomePage) {
+      const url = isAddPage ? "http://localhost:5000/add" : "http://localhost:5000/tasks";
+      fetch(url)
         .then((response) => response.json())
-        .then((data) => setTasks(data))
+        .then((data) => setTasks(data))  // Daten vom Backend in den State laden
         .catch((error) => console.error("Fehler beim Laden der Aufgaben", error));
+    } else {
+      // Auf der Startseite nur lokale Aufgaben anzeigen
+      setTasks([{ id: Date.now(), task: "Neue To-Do-Liste erstellen! ♥️", checked: false }]);
+      
     }
-  }, [isAddPage]);
+  }, [isAddPage]);  // Wenn wir von der Startseite oder Add-Seite kommen
 
   // Aufgabe hinzufügen (nur auf der Add-Seite wird sie gespeichert)
   const addTask = () => {
     if (newTask.trim() !== "") {
-      if (isAddPage) {
-        fetch("http://localhost:5000/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ task: newTask }),
+      const url = isAddPage ? "http://localhost:5000/add" : "http://localhost:5000/tasks";
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ task: newTask }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setTasks([...tasks, data]);
+          setNewTask("");
         })
-          .then((response) => response.json())
-          .then((data) => {
-            setTasks([...tasks, data]);
-            setNewTask("");
-          })
-          .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
-      } else {
-        // Aufgaben nur lokal speichern, wenn nicht auf der /add-Seite
-        setTasks([...tasks, { id: Date.now(), task: newTask, checked: false }]);
-        setNewTask("");
-      }
+        .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
     }
   };
 
   // Aufgabe bearbeiten
   const saveEditTask = () => {
-    fetch(`http://localhost:5000/tasks/${editTaskId}`, {
+    const url = isAddPage ? `http://localhost:5000/add/${editTaskId}` : `http://localhost:5000/tasks/${editTaskId}`;
+    fetch(url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -67,7 +67,8 @@ function Todolist() {
 
   // Aufgabe löschen
   const deleteTask = (id) => {
-    fetch(`http://localhost:5000/tasks/${id}`, {
+    const url = isAddPage ? `http://localhost:5000/add/${id}` : `http://localhost:5000/tasks/${id}`;
+    fetch(url, {
       method: "DELETE",
     })
       .then(() => {
@@ -79,14 +80,14 @@ function Todolist() {
   // Aufgabe als erledigt markieren
   const toggleCompleted = (id) => {
     const task = tasks.find((task) => task.id === id);
-    fetch(`http://localhost:5000/tasks/${id}`, {
+    fetch(`http://localhost:5000/${isAddPage ? 'add' : 'tasks'}/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        task: task.task,
-        checked: !task.checked,
+        task: isAddPage ? task.task : task.pgtask,  // Hier `task.task` für SQLite und `task.pgtask` für PostgreSQL
+        checked: !task.checked,  // `checked` für SQLite und `completed` für PostgreSQL
       }),
     })
       .then((response) => response.json())
@@ -133,7 +134,7 @@ function Todolist() {
             <li key={task.id} className="task-item">
               <input
                 type="checkbox"
-                checked={task.checked}
+                checked={task.checked}  // Verwende `checked` für SQLite und `completed` für PostgreSQL
                 onChange={() => toggleCompleted(task.id)}
                 className="checkbox"
               />
@@ -155,7 +156,7 @@ function Todolist() {
                   onClick={() => setEditTaskId(task.id)}
                   className={task.checked ? "task-text completed" : "task-text"}
                 >
-                  {task.task}
+                  {isAddPage ? task.task : task.pgtask}  {/* `task.task` für SQLite und `task.pgtask` für PostgreSQL */}
                 </span>
               )}
               <button
@@ -168,7 +169,7 @@ function Todolist() {
                 className="edit-button"
                 onClick={() => {
                   setEditTaskId(task.id);
-                  setEditText(task.task);
+                  setEditText(isAddPage ? task.task : task.pgtask);  // `task.task` für SQLite und `task.pgtask` für PostgreSQL
                 }}
               >
                 Bearbeiten

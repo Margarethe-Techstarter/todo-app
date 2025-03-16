@@ -17,9 +17,10 @@ function App() {
       )}
 
       {/* Die Todolist-Komponente */}
-      <Todolist /> 
+      <Todolist />
     </div>
   );
 }
 
 export default App;
+
