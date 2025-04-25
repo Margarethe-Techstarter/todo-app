@@ -10,7 +10,7 @@ function Todolist() {
   const [isHomePage, setIsHomePage] = useState(window.location.pathname === '/');  // Für die Startseite
 
 
-  
+
   // Aufgaben vom Backend laden (nur wenn nicht auf der Startseite oder /add)
   useEffect(() => {
     if (!isHomePage) {
@@ -21,8 +21,8 @@ function Todolist() {
         .catch((error) => console.error("Fehler beim Laden der Aufgaben", error));
     } else {
       // Auf der Startseite nur lokale Aufgaben anzeigen
-      setTasks([{ id: Date.now(), task: "Neue To-Do-Liste erstellen! ♥️", checked: false }]);
-      
+      setTasks([{ id: 1, task: "Neue To-Do-Liste erstellen! ♥️", checked: false }]);
+
     }
   }, [isAddPage]);  // Wenn wir von der Startseite oder Add-Seite kommen
 
@@ -39,8 +39,14 @@ function Todolist() {
       })
         .then((response) => response.json())
         .then((data) => {
-          setTasks([...tasks, data]);
-          setNewTask("");
+          
+          const addedTask = {
+            id: data.id || tasks.length + 1, // Fallback für die ID, falls das Backend keine liefert
+            task: data.task || newTask, // Verwende `data.task` oder den ursprünglichen Text
+            checked: data.checked || false, // Standardwert für `checked`
+          };
+          setTasks([...tasks, addedTask]); // Aufgabe zum State hinzufügen
+          setNewTask(""); // Eingabefeld zurücksetzen
         })
         .catch((error) => console.error("Fehler beim Hinzufügen der Aufgabe", error));
     }
@@ -156,7 +162,7 @@ function Todolist() {
                   onClick={() => setEditTaskId(task.id)}
                   className={task.checked ? "task-text completed" : "task-text"}
                 >
-                  {isAddPage ? task.task : task.pgtask}  {/* `task.task` für SQLite und `task.pgtask` für PostgreSQL */}
+                  {task.task} {/* Verwende `task.task` für den statischen Task */}
                 </span>
               )}
               <button
